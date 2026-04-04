@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>StuMarket | Inicio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section { padding: 60px 0; border-bottom: 1px solid #dee2e6; }
+        .btn-custom { width: 180px; padding: 12px; font-weight: bold; }
+    </style>
+</head>
+<body class="text-center">
+
+    <div class="hero-section">
+        <h1 class="display-3 fw-bold">StuMarket</h1>
+        <p class="lead">"De estudiante a estudiante, todo lo que necesitas."</p>
+    </div>
+
+    <div class="container mt-5">
+        <h2 class="mb-5">¡Qué Alegría Verte Otra Vez!</h2>
+        
+        <div class="d-flex justify-content-center align-items-center gap-4">
+            <a href="{% url 'registro_seleccion' %}" class="btn btn-primary btn-custom">Registrarse</a>
+            <span class="fw-bold">ó</span>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-custom">Iniciar Sesión</a>
+        </div>
+    </div>
+
+</body>
+</html>

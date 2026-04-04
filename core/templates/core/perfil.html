@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StuMarket | Mi Perfil</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #008cff;
+            --primary-hover: #0076d6;
+            --bg-light: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .profile-card {
+            background: #ffffff;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .nav-pills .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+            border-radius: 10px;
+            padding: 12px 20px;
+            transition: 0.3s;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .nav-pills .nav-link:hover:not(.active) {
+            background-color: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .profile-img-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 5px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-edit-photo {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #fff;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-edit-photo:hover {
+            transform: scale(1.1);
+            background: var(--primary-hover);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 140, 255, 0.1);
+        }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: bold;
+            border: none;
+            transition: 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}    
+
+<div class="container py-5">
+    <div class="mb-4">
+        <a href="{% url 'home' %}" class="text-decoration-none text-muted fw-bold">
+            <i class="bi bi-arrow-left me-2"></i> Volver al Inicio
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="profile-card p-4 text-center">
+                <form action="{% url 'cambiar_foto' %}" method="POST" enctype="multipart/form-data" id="fotoForm">
+                    {% csrf_token %}
+                    <div class="profile-img-container mb-3">
+                        {% if user.perfil.foto %}
+                            <img src="{{ user.perfil.foto.url }}" class="rounded-circle profile-img" id="previewImg">
+                        {% else %}
+                            <div class="rounded-circle profile-img bg-light d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person text-secondary" style="font-size: 4rem;"></i>
+                            </div>
+                        {% endif %}
+                        <label for="id_foto" class="btn-edit-photo shadow">
+                            <i class="bi bi-camera-fill"></i>
+                        </label>
+                        <input type="file" name="foto" id="id_foto" hidden onchange="document.getElementById('fotoForm').submit();">
+                    </div>
+                </form>
+                
+                <h4 class="fw-bold mb-0">{{ user.first_name }} {{ user.last_name }}</h4>
+                <p class="text-muted small mb-3">{{ user.email }}</p>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-4 text-uppercase">
+                    {{ user.perfil.rol|default:"cliente" }}
+                </span>
+
+                <div class="nav flex-column nav-pills text-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active mb-2" id="v-pills-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-info" type="button">
+                        <i class="bi bi-person-lines-fill me-3"></i> Mis Datos
+                    </button>
+                    <button class="nav-link mb-2" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button">
+                        <i class="bi bi-shield-lock me-3"></i> Seguridad
+                    </button>
+                    {% if user.perfil.rol != 'vendedor' %}
+                    <button class="nav-link mb-2 text-success" id="v-pills-seller-tab" data-bs-toggle="pill" data-bs-target="#v-pills-seller" type="button">
+                        <i class="bi bi-shop me-3"></i> Ser Vendedor
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="profile-card p-4 p-md-5">
+                <div class="tab-content" id="v-pills-tabContent">
+                    
+                    <div class="tab-pane fade show active" id="v-pills-info">
+                        <h3 class="fw-bold mb-4">Información del Perfil</h3>
+                        <form method="POST" action="{% url 'editar_perfil' %}">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Nombre(s)</label>
+                                    <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Apellidos</label>
+                                    <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Correo Electrónico</label>
+                                    <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                                    {% if not user.perfil.email_verificado %}
+                                        <small class="text-danger fw-bold"><i class="bi bi-patch-exclamation"></i> Correo pendiente de verificación.</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-save">Actualizar Datos</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="v-pills-security">
+                        <h3 class="fw-bold mb-4">Cambiar Contraseña</h3>
+                        <form method="POST" action="{% url 'change_password' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Contraseña Actual</label>
+                                <input type="password" name="old_password" class="form-control" placeholder="••••••••">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nueva Contraseña</label>
+                                <input type="password" name="new_password" class="form-control" placeholder="••••••••">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Confirmar Nueva Contraseña</label>
+                                <input type="password" name="confirm_password" class="form-control" placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn btn-save">Guardar Nueva Contraseña</button>
+                        </form>
+                        <hr class="my-4">
+                    <div class="p-3 rounded-4 bg-danger-subtle border border-danger">
+                        <h5 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Zona de Peligro</h5>
+                        <p class="small text-muted">Una vez que elimines tu cuenta, no hay vuelta atrás. Se borrarán tus productos, mensajes y perfil permanentemente.</p>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            Eliminar mi cuenta definitivamente
+                        </button>
+                    </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="v-pills-seller">
+                        <div class="text-center py-4">
+                            <div class="mb-4">
+                                <i class="bi bi-rocket-takeoff text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="fw-bold">¿Quieres vender en StuMarket?</h3>
+                            <p class="text-muted px-md-5">
+                                Al convertirte en vendedor, podrás publicar tus propios productos y servicios para que otros estudiantes los adquieran. 
+                                Necesitaremos validar tu cuenta para asegurar una comunidad segura.
+                            </p>
+                            <form method="POST" action="{% url 'solicitar_vendedor' %}">
+                                {% csrf_token %}
+                                <div class="alert alert-info border-0 rounded-4 text-start p-4 mb-4">
+                                    <h6 class="fw-bold"><i class="bi bi-info-circle me-2"></i> Requisitos:</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Tener un correo válido.</li>
+                                        <li>Completar tu información de contacto.</li>
+                                        <li>Aceptar los términos de comercio estudiantil.</li>
+                                    </ul>
+                                </div>
+                                <form action="{% url 'solicitar_vendedor' %}" method="POST" class="row g-3">
+                                    {% csrf_token %}
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Número de Teléfono</label>
+                                        <input type="text" name="telefono" class="form-control" placeholder="418..." required>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Número de Control</label>
+                                        <input type="text" name="numero_control" class="form-control" placeholder="122..." required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Grupo</label>
+                                        <input type="text" name="grupo" class="form-control" placeholder="GDS0541" required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Edificio</label>
+                                        <select name="edificio" class="form-select" required>
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="Edificio A">Edificio A</option>
+                                            <option value="Edificio D">Edificio D</option>
+                                            <option value="Edificio F">Edificio F</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">Número de Casillero</label>
+                                        <input type="text" name="casillero" class="form-control" placeholder="N/A o #">
+                                    </div>
+
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow">
+                                            <i class="bi bi-shop me-2"></i> Activar Perfil de Vendedor
+                                        </button>
+                                    </div>
+                                </form>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">¿Estás absolutamente seguro?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-person-x text-danger display-1"></i>
+                <p class="mt-3 text-muted">Esta acción eliminará todos tus datos de <strong>StuMarket</strong>. Para confirmar, escribe tu contraseña:</p>
+                
+                <form action="{% url 'eliminar_cuenta' %}" method="POST" id="deleteForm">
+                    {% csrf_token %}
+                    <input type="password" name="password_confirm" class="form-control mb-3" placeholder="Ingresa tu contraseña" required>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg rounded-pill">Eliminar Permanentemente</button>
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

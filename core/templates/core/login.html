@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StuMarket | Iniciar Sesión</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .login-card {
+            max-width: 450px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .btn-custom {
+            background-color: #008cff !important;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .btn-custom:hover {
+            background-color: #0076d6 !important;
+            transform: translateY(-2px);
+        }
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+        }
+        .form-control:focus {
+            border-color: #008cff;
+            box-shadow: 0 0 0 0.25rem rgba(0, 140, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="login-card">
+        
+        <div class="text-center mb-4">
+            <h1 class="fw-bold h2 mb-2">¡Bienvenido de Vuelta!</h1>
+            <p class="text-muted small">
+                ¿Aún no tienes una cuenta? 
+                <a href="{% url 'registro_seleccion' %}" class="text-primary text-decoration-none fw-bold">Regístrate</a>
+            </p>
+        </div>
+
+        <form method="POST" autocomplete="off">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} py-2 small rounded-3">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.errors or form.non_field_errors %}
+                <div class="alert alert-danger py-2 small rounded-3 text-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    El correo o la contraseña son incorrectos, o la cuenta no existe.
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-dark">Escribe tu correo electrónico:</label>
+                <input type="text" name="username" class="form-control" 
+                       placeholder="ejemplo@utng.edu.mx" 
+                       autocomplete="new-password" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-dark">Escribe tu contraseña:</label>
+                <input type="password" name="password" class="form-control" 
+                       placeholder="••••••••" 
+                       autocomplete="new-password" required>
+            </div>
+
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary btn-custom">
+                    Ingresa
+                </button>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'reset_password' %}" class="text-muted small text-decoration-underline">
+                    ¿Olvidaste tu contraseña? Recupérala
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

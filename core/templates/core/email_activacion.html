@@ -1,0 +1,8 @@
+{% autoescape off %}
+Hola {{ user.first_name }},
+Por favor activa tu cuenta de StuMarket haciendo clic en el siguiente enlace:
+
+http://{{ domain }}{% url 'activar' uidb64=uid token=token %}
+
+¡Nos vemos en el mercado!
+{% endautoescape %}

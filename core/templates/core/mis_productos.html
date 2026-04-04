@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Productos | StuMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #f8f9fc;
+            --accent-color: #1cc88a;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: white;
+            border-right: 1px solid #e3e6f0;
+            z-index: 1000;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+
+        .menu-item-hover:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color) !important;
+            transition: 0.3s;
+        }
+
+        .product-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #1cc88a, #13855c);
+            border: none;
+            color: white;
+        }
+
+        .search-bar {
+            border-radius: 25px;
+            padding-left: 45px;
+            border: 1px solid #e3e6f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar d-none d-md-block p-3">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-primary">StuMarket</h3>
+        </div>
+        
+        <div class="nav flex-column">
+            <a href="{% url 'home' %}" class="nav-link text-dark py-3 px-4 rounded-3 menu-item-hover">
+                <i class="bi bi-house-door-fill me-3"></i> Inicio
+            </a>
+            <a href="{% url 'perfil' %}" class="nav-link text-dark py-3 px-4 rounded-3 menu-item-hover">
+                <i class="bi bi-person-fill me-3"></i> Mi Perfil
+            </a>
+            <a href="{% url 'mis_productos' %}" class="nav-link text-success py-3 px-4 rounded-3 bg-light fw-bold">
+                <i class="bi bi-box-seam-fill me-3"></i> Mis Productos
+            </a>
+            <hr>
+            <form action="{% url 'logout' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="nav-link text-danger py-3 px-4 w-100 text-start border-0 bg-transparent">
+                    <i class="bi bi-box-arrow-right me-3"></i> Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 class="fw-bold">Gestión de Inventario</h1>
+                <p class="text-muted">Aquí puedes ver y administrar lo que tienes a la venta.</p>
+            </div>
+            <a href="{% url 'agregar_producto' %}" class="btn btn-add btn-lg px-4 rounded-pill shadow-sm">
+                <i class="bi bi-plus-circle-fill me-2"></i> Publicar Nuevo
+            </a>
+        </div>
+
+        <div class="position-relative mb-5" style="max-width: 500px;">
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+            <input type="text" class="form-control form-control-lg search-bar" placeholder="Buscar entre mis productos...">
+        </div>
+
+        <div class="row g-4">
+            {% for producto in productos %}
+            <div class="col-xl-4 col-lg-6">
+                <div class="card product-card h-100 shadow-sm">
+                    <div class="position-relative">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" class="card-img-top" style="height: 220px; object-fit: cover; border-radius: 15px 15px 0 0;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 220px; border-radius: 15px 15px 0 0;">
+                                <i class="bi bi-image text-secondary display-4"></i>
+                            </div>
+                        {% endif %}
+                        <span class="badge bg-white text-dark position-absolute top-0 end-0 m-3 shadow-sm rounded-pill">
+                            ${{ producto.precio }}
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <div class="mb-2">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill">{{ producto.categoria }}</span>
+                        </div>
+                        <h5 class="fw-bold mb-2">{{ producto.nombre }}</h5>
+                        <p class="text-muted small mb-3">{{ producto.descripcion|truncatechars:100 }}</p>
+                        
+                        <div class="d-flex gap-2 pt-3 border-top">
+                            <a href="#" class="btn btn-outline-primary flex-grow-1 rounded-pill btn-sm">
+                                <i class="bi bi-pencil me-1"></i> Editar
+                            </a>
+                            <button class="btn btn-outline-danger flex-grow-1 rounded-pill btn-sm">
+                                <i class="bi bi-trash me-1"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="bg-white p-5 rounded-4 shadow-sm border border-dashed">
+                    <i class="bi bi-box2 text-light display-1"></i>
+                    <h3 class="mt-4 fw-bold">Tu tienda está vacía</h3>
+                    <p class="text-muted">Aún no has subido ningún producto o servicio al StuMarket.</p>
+                    <a href="{% url 'agregar_producto' %}" class="btn btn-primary rounded-pill px-5 mt-3">Subir mi primer artículo</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Publicar en StuMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .form-card { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
+        .drop-zone { border: 2px dashed #dee2e6; border-radius: 15px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .drop-zone:hover { border-color: #008cff; background: #f8f9fa; }
+        #map { height: 300px; border-radius: 15px; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <a href="{% url 'mis_productos' %}" class="btn btn-link text-decoration-none text-muted fw-bold mb-4">
+                <i class="bi bi-arrow-left me-2"></i> Volver a mis productos
+            </a>
+
+            <div class="form-card p-4 p-md-5">
+                <h2 class="fw-bold mb-4">Crear Publicación</h2>
+                
+                <form action="{% url 'agregar_producto' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Nombre del Producto o Servicio</label>
+                            <input type="text" name="nombre" class="form-control form-control-lg" placeholder="Ej: Calculadora científica" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Clasificación</label>
+                            <select name="tipo" class="form-select form-select-lg" required>
+                                <option value="producto">Producto</option>
+                                <option value="servicio">Servicio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Precio ($)</label>
+                        <div class="input-group input-group-lg" style="max-width: 300px;">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="precio" step="0.01" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Teléfono de contacto</label>
+                        <div class="d-flex gap-3 align-items-center mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="phone_option" id="phone1" value="{{ user.perfil.contacto }}" checked>
+                                <label class="form-check-label" for="phone1">Usar el de mi perfil ({{ user.perfil.contacto }})</label>
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="phone_option" id="phone2" value="otro">
+                            <label class="form-check-label" for="phone2">Usar otro número</label>
+                        </div>
+                        <input type="text" name="otro_telefono" id="input_otro" class="form-control" placeholder="Escribe el nuevo número" style="display: none;">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Ubicación</label>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="checkUbicacion" name="fuera_uni">
+                            <label class="form-check-label" for="checkUbicacion">¿Se ofrece fuera de la universidad?</label>
+                        </div>
+                        <input type="text" id="pac-input" name="ubicacion_url" class="form-control mb-2" placeholder="Busca la dirección en el mapa" style="display: none;">
+                        <div id="map"></div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label fw-bold">Imágenes</label>
+                        <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                            <i class="bi bi-cloud-upload display-4 text-muted"></i>
+                            <p class="mt-2 text-muted">Haz clic para subir fotos del producto</p>
+                            <input type="file" name="imagen" id="fileInput" hidden accept="image/*">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 rounded-4 mb-4">
+                        <i class="bi bi-clock-history me-2"></i> Tu publicación será revisada por un administrador antes de aparecer en el inicio.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow">
+                        Enviar para aprobación
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mostrar/Ocultar input de otro teléfono
+    document.querySelectorAll('input[name="phone_option"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            document.getElementById('input_otro').style.display = (e.target.value === 'otro') ? 'block' : 'none';
+        });
+    });
+
+    // Mostrar mapa solo si se activa el switch
+    document.getElementById('checkUbicacion').addEventListener('change', function() {
+        const display = this.checked ? 'block' : 'none';
+        document.getElementById('map').style.display = display;
+        document.getElementById('pac-input').style.display = display;
+    });
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBiD_LahBkpJ7nN4Qj8IpwrmrOSL3BYdE&libraries=places"></script>
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 21.1527, lng: -100.9311 }, // Dolores Hidalgo coord
+            zoom: 15,
+        });
+        const input = document.getElementById("pac-input");
+        const autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.bindTo("bounds", map);
+        
+        const marker = new google.maps.Marker({ map: map });
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+            map.setCenter(place.geometry.location);
+            marker.setPosition(place.geometry.location);
+        });
+    }
+    google.maps.event.addDomListener(window, 'load', initMap);
+</script>
+</body>
+</html>
