@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Productos | StuMarket</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         :root {
             --primary-color: #4e73df;
@@ -17,6 +20,7 @@
         body {
             background-color: #f4f7f6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
         }
 
         .sidebar {
@@ -28,11 +32,14 @@
             background: white;
             border-right: 1px solid #e3e6f0;
             z-index: 1000;
+            overflow-y: auto;
         }
 
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 2rem;
+            min-height: 100vh;
+            display: block;
         }
 
         .menu-item-hover:hover {
@@ -49,7 +56,7 @@
 
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
         .btn-add {
@@ -63,15 +70,20 @@
             padding-left: 45px;
             border: 1px solid #e3e6f0;
         }
+
+        html {
+            overflow-y: scroll !important;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="sidebar d-none d-md-block p-3">
         <div class="text-center mb-4">
             <h3 class="fw-bold text-primary">StuMarket</h3>
         </div>
-        
+
         <div class="nav flex-column">
             <a href="{% url 'home' %}" class="nav-link text-dark py-3 px-4 rounded-3 menu-item-hover">
                 <i class="bi bi-house-door-fill me-3"></i> Inicio
@@ -93,6 +105,20 @@
     </div>
 
     <div class="main-content">
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm border-0 mb-4"
+            role="alert" style="border-radius: 15px;">
+            <div class="d-flex align-items-center">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} fs-4 me-3"></i>
+                <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
                 <h1 class="fw-bold">Gestión de Inventario</h1>
@@ -105,7 +131,8 @@
 
         <div class="position-relative mb-5" style="max-width: 500px;">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-            <input type="text" class="form-control form-control-lg search-bar" placeholder="Buscar entre mis productos...">
+            <input type="text" id="inputBuscador" class="form-control form-control-lg search-bar"
+                placeholder="Buscar entre mis productos...">
         </div>
 
         <div class="row g-4">
@@ -114,11 +141,13 @@
                 <div class="card product-card h-100 shadow-sm">
                     <div class="position-relative">
                         {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" class="card-img-top" style="height: 220px; object-fit: cover; border-radius: 15px 15px 0 0;">
+                        <img src="{{ producto.imagen.url }}" class="card-img-top"
+                            style="height: 220px; object-fit: cover; border-radius: 15px 15px 0 0;">
                         {% else %}
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 220px; border-radius: 15px 15px 0 0;">
-                                <i class="bi bi-image text-secondary display-4"></i>
-                            </div>
+                        <div class="bg-light d-flex align-items-center justify-content-center"
+                            style="height: 220px; border-radius: 15px 15px 0 0;">
+                            <i class="bi bi-image text-secondary display-4"></i>
+                        </div>
                         {% endif %}
                         <span class="badge bg-white text-dark position-absolute top-0 end-0 m-3 shadow-sm rounded-pill">
                             ${{ producto.precio }}
@@ -127,18 +156,33 @@
 
                     <div class="card-body p-4">
                         <div class="mb-2">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill">{{ producto.categoria }}</span>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill">{{ producto.tipo }}</span>
+                            <span class="badge rounded-pill 
+                                {% if producto.estado == 'aprobado' %} bg-success-subtle text-success
+                                {% elif producto.estado == 'rechazado' %} bg-danger-subtle text-danger
+                                {% else %} bg-warning-subtle text-warning {% endif %}">
+                                {{ producto.estado|capfirst }}
+                            </span>
                         </div>
                         <h5 class="fw-bold mb-2">{{ producto.nombre }}</h5>
                         <p class="text-muted small mb-3">{{ producto.descripcion|truncatechars:100 }}</p>
-                        
+
                         <div class="d-flex gap-2 pt-3 border-top">
-                            <a href="#" class="btn btn-outline-primary flex-grow-1 rounded-pill btn-sm">
+                            <a href="{% url 'editar_producto' producto.id %}"
+                                class="btn btn-outline-primary flex-grow-1 rounded-pill btn-sm">
                                 <i class="bi bi-pencil me-1"></i> Editar
                             </a>
-                            <button class="btn btn-outline-danger flex-grow-1 rounded-pill btn-sm">
-                                <i class="bi bi-trash me-1"></i> Eliminar
-                            </button>
+
+                            <div class="flex-grow-1">
+                                <button type="button" class="btn btn-outline-danger w-100 rounded-pill btn-sm"
+                                    onclick="confirmarBorrado('{{ producto.id }}', '{{ producto.nombre }}')">
+                                    <i class="bi bi-trash me-1"></i> Eliminar
+                                </button>
+                            </div>
+
+                            <form id="delete-form-{{ producto.id }}" action="{% url 'eliminar_producto' producto.id %}" method="POST" style="display:none;">
+                                {% csrf_token %}
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -157,5 +201,58 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!--script de buscador-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buscador = document.getElementById('inputBuscador');
+        // Seleccionamos las columnas que contienen las tarjetas
+        const tarjetas = document.querySelectorAll('.col-xl-4.col-lg-6');
+
+        buscador.addEventListener('input', function() {
+            const termino = buscador.value.toLowerCase().trim();
+
+            tarjetas.forEach(tarjeta => {
+                // Obtenemos el nombre y la descripción para buscar en ambos
+                const nombre = tarjeta.querySelector('h5').textContent.toLowerCase();
+                const descripcion = tarjeta.querySelector('p').textContent.toLowerCase();
+
+                if (nombre.includes(termino) || descripcion.includes(termino)) {
+                    tarjeta.style.display = ""; // Muestra si coincide
+                } else {
+                    tarjeta.style.display = "none"; // Oculta si no coincide
+                }
+            });
+        });
+    });
+</script>
+
+<!--ventanilla de confirmacion para eliminacion-->
+    <script>
+        function confirmarBorrado(id, nombre) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `Vas a eliminar "${nombre}". Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545', // Rojo Bootstrap
+                cancelButtonColor: '#6c757d', // Gris Bootstrap
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-4' // Para que combine con tu diseño de 15px
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Envía el formulario oculto específico
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            })
+        }
+    </script>
+
+    
 </body>
+
 </html>

@@ -1,8 +1,70 @@
 {% autoescape off %}
-Hola {{ user.first_name }},
-Por favor activa tu cuenta de StuMarket haciendo clic en el siguiente enlace:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .button {
+            background-color: #4e73df;
+            border-radius: 50px;
+            color: #ffffff !important;
+            display: inline-block;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 15px 35px;
+            text-decoration: none;
+            margin: 20px 0;
+        }
+        .footer {
+            color: #858796;
+            font-size: 12px;
+            margin-top: 30px;
+            border-top: 1px solid #e3e6f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td align="center" style="padding: 40px 0 20px 0; background-color: #4e73df;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">StuMarket</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px; text-align: center;">
+                            <h2 style="color: #3a3b45; margin-bottom: 20px;">¡Hola, {{ user.first_name }}!</h2>
+                            <p style="color: #4e4e4e; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                                Gracias por unirte a la comunidad de <strong>StuMarket</strong>. Estamos muy emocionados de tenerte a bordo. 
+                                <br><br>
+                                Para comenzar a comprar y vender con tus compañeros, solo necesitas confirmar tu cuenta haciendo clic en el botón de abajo:
+                            </p>
+                            
+                            <a href="http://{{ domain }}{% url 'activar' uidb64=uid token=token %}" class="button">
+                                Activar mi cuenta ahora
+                            </a>
 
-http://{{ domain }}{% url 'activar' uidb64=uid token=token %}
-
-¡Nos vemos en el mercado!
+                            <p style="color: #858796; font-size: 14px; margin-top: 30px;">
+                                Si el botón no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:
+                                <br>
+                                <span style="color: #4e73df; word-break: break-all;">http://{{ domain }}{% url 'activar' uidb64=uid token=token %}</span>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f8f9fc; text-align: center;" class="footer">
+                            <p style="margin: 0;">Este es un correo automático, por favor no respondas a este mensaje.</p>
+                            <p style="margin: 10px 0 0 0;">&copy; 2026 StuMarket - Universidad Tecnológica</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
 {% endautoescape %}

@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import RegistroClienteForm, RegistroVendedorForm
-from .models import Perfil, Producto
+from .models import Perfil, Producto,Favorito
+from django.db.models import Q ##busqueda potente
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -22,7 +23,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import logout
 
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
+from django.db.models import Avg,Count
 from .models import Resena
 
 # 1. PANTALLA DE BIENVENIDA (Pública)
@@ -34,11 +35,47 @@ def index(request):
     return render(request, 'core/index.html')
 
 # 2. PANTALLA PRINCIPAL DE VENTAS (Privada)
-# Solo accesible tras hacer login
 def home(request):
-    # Usamos fecha_creacion que es el nombre real en tu modelo
-    productos = Producto.objects.filter(estado='aprobado').order_by('-fecha_creacion')
-    return render(request, 'core/home.html', {'productos': productos})
+    query = request.GET.get('q')
+
+    # --- 1. ESTA ES LA ÚNICA QUE SE FILTRA ---
+    # Creamos una query base para las publicaciones generales
+    publicaciones = Producto.objects.filter(estado='aprobado')
+    
+    if query:
+        publicaciones = publicaciones.filter(
+            Q(nombre__icontains=query) | 
+            Q(descripcion__icontains=query)
+        )
+    
+    # Aplicamos el orden por fecha
+    productos = publicaciones.order_by('-fecha_creacion')
+
+
+    # --- 2. EL RESTO SE QUEDA IGUAL (SIN FILTRAR POR BÚSQUEDA) ---
+    
+    # Populares: siempre los mismos (basados en calificación global)
+    productos_populares = Producto.objects.filter(
+        estado='aprobado', 
+        tipo='producto'
+    ).annotate(
+        promedio=Avg('resenas__calificacion')
+    ).filter(
+        promedio__gte=4
+    ).order_by('-promedio')[:4]
+
+    # Servicios: siempre los mismos (últimos 4 servicios aprobados)
+    servicios = Producto.objects.filter(
+        estado='aprobado', 
+        tipo='servicio'
+    ).order_by('-fecha_creacion')[:4]
+
+    return render(request, 'core/home.html', {
+        'productos': productos, # Esta es la que cambia al buscar
+        'productos_populares': productos_populares,
+        'servicios': servicios,
+        'query': query
+    })
 
 def registro_seleccion(request):
     return render(request, 'core/registro_seleccion.html')
@@ -69,21 +106,25 @@ def login_view(request):
 def registro_cliente(request):
     if request.method == 'POST':
         form = RegistroClienteForm(request.POST, request.FILES)
+
         if form.is_valid():
             user = form.save(commit=False)
+
             correo = form.cleaned_data.get('email')
-            user.username = correo 
+            password = form.cleaned_data.get('password')
+
+            user.username = correo
             user.email = correo
-            
-            # --- OBLIGATORIO PARA FLUJO DE ACTIVACIÓN ---
-            user.is_active = False 
-            
-            user.set_password(form.cleaned_data['password'])
-            user.first_name = form.cleaned_data['nombre']
-            user.last_name = form.cleaned_data['apellidos']
-            
+            user.is_active = False
+
+            user.set_password(password)
+
+            user.first_name = form.cleaned_data.get('nombre')
+            user.last_name = form.cleaned_data.get('apellidos')
+
             try:
                 user.save()
+
                 Perfil.objects.create(
                     user=user,
                     rol='cliente',
@@ -91,21 +132,19 @@ def registro_cliente(request):
                     numero_control=form.cleaned_data.get('numero_control')
                 )
 
-                # Intentamos enviar el correo
                 try:
                     enviar_correo_activacion(request, user)
                 except Exception as e:
-                    print(f"Error enviando correo: {e}") 
-                    # Aún si falla el correo, redirigimos para que el usuario sepa qué pasó
-                
-                # ESTA LÍNEA ES LA QUE LANZA LA PANTALLA DE "REVISA TU CORREO"
+                    print(f"Error enviando correo: {e}")
+
                 return render(request, 'core/confirmar_envio.html')
 
             except IntegrityError:
                 form.add_error('email', "Este correo ya está registrado.")
-        else:
-            # Si el formulario no es válido (ej. contraseña corta), imprimimos en consola
-            print(form.errors) 
+
+        # 🔥 IMPORTANTE: mostrar errores en pantalla
+        return render(request, 'core/registro_cliente.html', {'form': form})
+
     else:
         form = RegistroClienteForm()
 
@@ -220,25 +259,32 @@ def solicitar_vendedor(request):
 def editar_perfil(request):
     if request.method == 'POST':
         user = request.user
-        nuevo_nombre = request.POST.get('first_name')
-        nuevo_apellido = request.POST.get('last_name')
         nuevo_correo = request.POST.get('email')
+        
+        # Guardamos nombres e información básica de inmediato
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.save() 
 
-        # 1. Lógica del Correo (Verificación)
+        # Si el correo cambió, iniciamos verificación
         if nuevo_correo and nuevo_correo != user.email:
-            # Aquí podrías enviar un correo real con un token
-            user.email = nuevo_correo
-            user.perfil.email_verificado = False
-            user.perfil.save()
-            messages.warning(request, "Correo actualizado. Por favor, verifica tu bandeja de entrada.")
-        
-        # 2. Actualizar nombres
-        user.first_name = nuevo_nombre
-        user.last_name = nuevo_apellido
-        user.save()
-        
-        messages.success(request, "Datos actualizados correctamente.")
+            codigo = str(random.randint(100000, 999999))
+            request.session['temp_email'] = nuevo_correo
+            request.session['verif_code'] = codigo
+            
+            send_mail(
+                'Código de Verificación StuMarket',
+                f'Tu código para cambiar de correo es: {codigo}',
+                'noreply@stumarket.com',
+                [nuevo_correo],
+                fail_silently=False,
+            )
+            messages.info(request, "Nombres actualizados. Verifica tu nuevo correo para completar el cambio.")
+            return render(request, 'core/verificar_codigo.html', {'email': nuevo_correo})
+
+        messages.success(request, "Perfil actualizado correctamente.")
     return redirect('perfil')
+
 
 @login_required
 def cambiar_foto(request):
@@ -383,19 +429,21 @@ def confirmar_email(request):
         nuevo_email = request.session.get('temp_email')
         
         if codigo_ingresado == codigo_real:
-            # SI EL CÓDIGO COINCIDE, AHORA SÍ ACTUALIZAMOS LA BD
             user = request.user
+            
+            # --- EL CAMBIO CLAVE ---
             user.email = nuevo_email
+            user.username = nuevo_email  # Actualizamos también el nombre de usuario
             user.save()
+            # -----------------------
             
-            # Limpiamos la sesión
-            del request.session['verif_code']
-            del request.session['temp_email']
+            request.session.pop('verif_code', None)
+            request.session.pop('temp_email', None)
             
-            messages.success(request, "¡Correo verificado y actualizado con éxito!")
+            messages.success(request, "¡Cuenta actualizada! Ahora tu nombre de usuario y correo son iguales.")
             return redirect('perfil')
         else:
-            messages.error(request, "El código es incorrecto. Inténtalo de nuevo.")
+            messages.error(request, "El código es incorrecto.")
             return render(request, 'core/verificar_codigo.html', {'email': nuevo_email})
             
     return redirect('perfil')
@@ -408,6 +456,8 @@ def mis_productos(request):
     productos = request.user.productos.all() 
     return render(request, 'core/mis_productos.html', {'productos': productos})
 
+ 
+
 @login_required
 def mis_productos(request):
     # Filtrar solo los productos del usuario actual
@@ -419,27 +469,48 @@ def mis_productos(request):
 @login_required
 def agregar_producto(request):
     if request.method == 'POST':
-        # Procesar teléfono
-        opcion_tel = request.POST.get('phone_option')
-        telefono_final = request.POST.get('otro_telefono') if opcion_tel == 'otro' else opcion_tel
+        # 1. Recolección de datos
+        nombre = request.POST.get('nombre')
+        tipo = request.POST.get('tipo')
+        precio_raw = request.POST.get('precio')
+        descripcion = request.POST.get('descripcion', '')
+        imagen = request.FILES.get('imagen')
         
-        # Crear producto pero NO publicar (estado pendiente por defecto)
-        nuevo_p = Producto(
-            vendedor=request.user,
-            nombre=request.POST.get('nombre'),
-            tipo=request.POST.get('tipo'),
-            precio=request.POST.get('precio'),
-            descripcion=request.POST.get('descripcion', ''),
-            imagen=request.FILES.get('imagen'),
-            ubicacion_externa=request.POST.get('ubicacion_url'),
-            telefono_contacto=telefono_final,
-            estado='pendiente' # Importante
-        )
-        nuevo_p.save()
-        
-        messages.success(request, "Publicación enviada. Un administrador la revisará pronto.")
-        return redirect('mis_productos')
-        
+        # 2. VALIDACIONES CRÍTICAS
+        # A. Campos vacíos
+        if not all([nombre, tipo, precio_raw, imagen]):
+            messages.error(request, "Todos los campos son obligatorios.")
+            return render(request, 'core/agregar_producto.html')
+
+        # B. Validación de Precio (Evita el error Decimal de antes)
+        try:
+            precio_final = float(precio_raw)
+            if precio_final <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            messages.error(request, "Escribe un precio numérico válido (mayor a 0).")
+            return render(request, 'core/agregar_producto.html')
+
+        # 3. Guardado seguro
+        try:
+            nuevo_p = Producto(
+                vendedor=request.user,
+                nombre=nombre,
+                tipo=tipo,
+                precio=precio_final,
+                descripcion=descripcion,
+                imagen=imagen,
+                estado='pendiente'
+            )
+            nuevo_p.save()
+            
+            messages.success(request, "¡Publicación enviada! El admin la revisará.")
+            return redirect('mis_productos') 
+            
+        except Exception as e:
+            messages.error(request, f"Error al guardar: {e}")
+            return render(request, 'core/agregar_producto.html')
+
     return render(request, 'core/agregar_producto.html')
 
 
@@ -452,10 +523,10 @@ def eliminar_cuenta(request):
         # Verificamos que la contraseña sea correcta
         if user.check_password(password_confirm):
             # Opcional: Aquí podrías eliminar imágenes de la carpeta media si quisieras
-            user.delete() 
             logout(request)
+            user.delete() 
             messages.success(request, "Tu cuenta ha sido eliminada. Lamentamos verte partir.")
-            return redirect('home')
+            return redirect('login')
         else:
             messages.error(request, "La contraseña es incorrecta. No se pudo eliminar la cuenta.")
             return redirect('perfil')
@@ -464,13 +535,29 @@ def eliminar_cuenta(request):
 
 def detalle_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
-    resenas = producto.resenas.all()
     
-    # Promedio del producto
+    # Lógica de reseñas (Se queda igual)
+    if request.method == 'POST':
+        calificacion = request.POST.get('calificacion')
+        comentario = request.POST.get('comentario')
+        
+        Resena.objects.create(
+            producto=producto,
+            usuario=request.user,
+            calificacion=calificacion,
+            comentario=comentario
+        )
+        return redirect('detalle_producto', producto_id=producto.id)
+    
+    resenas = producto.resenas.all().order_by('-fecha')
     promedio_producto = resenas.aggregate(Avg('calificacion'))['calificacion__avg'] or 0
-    
-    # Promedio del vendedor (de todos sus productos)
     promedio_vendedor = Resena.objects.filter(producto__vendedor=producto.vendedor).aggregate(Avg('calificacion'))['calificacion__avg'] or 0
+    
+    # --- ESTO ES LO NUEVO Y SEGURO ---
+    es_favorito = False
+    if request.user.is_authenticated:
+        es_favorito = Favorito.objects.filter(usuario=request.user, producto=producto).exists()
+    # --------------------------------
     
     context = {
         'producto': producto,
@@ -478,5 +565,101 @@ def detalle_producto(request, producto_id):
         'promedio_producto': promedio_producto,
         'promedio_vendedor': promedio_vendedor,
         'total_resenas': resenas.count(),
+        'es_favorito': es_favorito,  # Enviamos la respuesta al HTML
     }
     return render(request, 'core/detalle_producto.html', context)
+
+# --- VISTA PARA ELIMINAR PRODUCTO ---
+@login_required
+def eliminar_producto(request, producto_id):
+    # Buscamos el producto asegurándonos que el vendedor sea quien solicita borrarlo
+    producto = get_object_or_404(Producto, id=producto_id, vendedor=request.user)
+    
+    if request.method == 'POST':
+        producto.delete()
+        messages.success(request, "El producto ha sido eliminado permanentemente.")
+        # El redirect funciona como "limpieza de caché" forzando una nueva carga de datos
+        return redirect('mis_productos')
+    
+    return redirect('mis_productos')
+
+# ---EDITAR PRODUCTO ---
+@login_required
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id, vendedor=request.user)
+
+    if request.method == 'POST':
+        # Capturamos datos del formulario manual
+        nombre = request.POST.get('nombre')
+        tipo = request.POST.get('tipo')
+        precio = request.POST.get('precio')
+        descripcion = request.POST.get('descripcion')
+        nueva_imagen = request.FILES.get('imagen')
+
+        # Validaciones básicas
+        if not all([nombre, precio]):
+            messages.error(request, "El nombre y el precio son obligatorios.")
+            return render(request, 'core/editar_producto.html', {'producto': producto})
+
+        # Actualizamos los campos
+        producto.nombre = nombre
+        producto.tipo = tipo
+        producto.precio = precio
+        producto.descripcion = descripcion
+        
+        if nueva_imagen:
+            producto.imagen = nueva_imagen
+            
+        # IMPORTANTE: Al editar, el estado vuelve a 'pendiente' para que el admin lo revise de nuevo
+        producto.estado = 'pendiente'
+        producto.save()
+
+        messages.success(request, "Producto actualizado. Esperando nueva revisión del administrador.")
+        return redirect('mis_productos')
+
+    return render(request, 'core/editar_producto.html', {'producto': producto})
+
+##Apartado Hamburguesa bootstrap
+##vista terminos y condiciones 
+def terminos_view(request):
+    return render(request, 'core/terminos.html')
+
+##Apartado favoritos
+@login_required
+def agregar_favorito(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    # Buscamos si ya existe, si no lo crea
+    favorito, created = Favorito.objects.get_or_create(
+        usuario=request.user, 
+        producto=producto
+    )
+    
+    if not created:
+        # Si ya existía y le dio click de nuevo, lo quitamos (Efecto On/Off)
+        favorito.delete()
+        messages.info(request, "Eliminado de tus favoritos.")
+    else:
+        messages.success(request, "¡Agregado a tus favoritos!")
+    
+    # Te regresa a la misma página donde estabas
+    return redirect('detalle_producto', producto_id=producto.id)
+
+@login_required
+def favoritos_view(request):
+    # Aquí es donde cargamos tu archivo favoritos.html
+    mis_favoritos = Favorito.objects.filter(usuario=request.user).select_related('producto')
+    
+    return render(request, 'core/favoritos.html', {
+        'favoritos': mis_favoritos
+    })
+
+@login_required
+def eliminar_favorito(request, favorito_id):
+    if request.method == 'POST':
+        # Borramos usando el ID de la tabla core_favorito
+        fav = get_object_or_404(Favorito, id=favorito_id, usuario=request.user)
+        fav.delete()
+        messages.success(request, "Se quitó de la lista.")
+    
+    return redirect('favoritos') # Nombre de la URL de tu lista

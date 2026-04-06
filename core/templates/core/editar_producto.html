@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Publicación | StuMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+
+        .drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            height: 250px;
+            display: flex;
+            overflow: hidden;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .drop-zone:hover {
+            border-color: #008cff;
+            background: #f8f9fa;
+        }
+
+        #preview {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <a href="{% url 'mis_productos' %}" class="btn btn-link text-decoration-none text-muted fw-bold mb-4">
+                    <i class="bi bi-arrow-left me-2"></i> Volver a mis productos
+                </a>
+
+                <div class="form-card p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold m-0">Editar Publicación</h2>
+                        
+                        <form id="formEliminar" action="{% url 'eliminar_producto' producto.id %}" method="POST" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                        
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="confirmarEliminar()">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+
+                    <form id="publicarForm" action="{% url 'editar_producto' producto.id %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Nombre del Producto o Servicio</label>
+                                <input type="text" name="nombre" class="form-control form-control-lg"
+                                    value="{{ producto.nombre }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Clasificación</label>
+                                <select name="tipo" class="form-select form-select-lg" required>
+                                    <option value="producto" {% if producto.tipo == 'producto' %}selected{% endif %}>Producto</option>
+                                    <option value="servicio" {% if producto.tipo == 'servicio' %}selected{% endif %}>Servicio</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Precio ($)</label>
+                            <div class="input-group input-group-lg" style="max-width: 300px;">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="precio" step="0.01" class="form-control" 
+                                    value="{{ producto.precio }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Teléfono de contacto</label>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="phone_option" id="phone1"
+                                    value="{{ user.perfil.contacto }}" checked>
+                                <label class="form-check-label" for="phone1">Usar mi perfil ({{ user.perfil.contacto }})</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="phone_option" id="phone2" value="otro">
+                                <label class="form-check-label" for="phone2">Usar otro número</label>
+                            </div>
+                            <input type="text" name="otro_telefono" id="input_otro" class="form-control"
+                                placeholder="Nuevo número" style="display: none;">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Ubicación</label>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="checkUbicacion" name="fuera_uni" 
+                                    {% if producto.ubicacion_url %}checked{% endif %}>
+                                <label class="form-check-label" for="checkUbicacion">¿Se ofrece fuera de la universidad?</label>
+                            </div>
+                            
+                            <input type="text" id="pac-input" name="ubicacion_url" 
+                                class="form-control mb-2 {% if not producto.ubicacion_url %}d-none{% endif %}"
+                                value="{{ producto.ubicacion_url|default:'' }}"
+                                placeholder="Busca la dirección en el mapa">
+                            
+                            <div id="map" class="{% if not producto.ubicacion_url %}d-none{% endif %}"></div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-bold">Imagen Actual</label>
+                            <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                                <div id="placeholder" class="{% if producto.imagen %}d-none{% endif %}">
+                                    <i class="bi bi-cloud-upload display-4 text-muted"></i>
+                                    <p class="mt-2 text-muted">Haz clic para cambiar la foto</p>
+                                </div>
+                                
+                                <img id="preview" src="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}" 
+                                     class="{% if not producto.imagen %}d-none{% endif %}">
+                                
+                                <input type="file" name="imagen" id="fileInput" hidden accept="image/*"
+                                    onchange="previewImage(event)">
+                            </div>
+                            <small class="text-muted mt-2 d-block text-center">Si no eliges una foto nueva, se mantendrá la actual.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <textarea name="descripcion" class="form-control" rows="4"
+                                style="border-radius: 15px; resize: none;">{{ producto.descripcion }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">
+                                Guardar cambios
+                            </button>
+                            <a href="{% url 'mis_productos' %}" class="btn btn-link text-muted">Cancelar cambios</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="envioModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <h3 class="fw-bold">Actualizando...</h3>
+                    <p class="text-muted">Estamos guardando los cambios de tu publicación.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función SweetAlert2 para eliminar el mensaje feo de la IP
+        function confirmarEliminar() {
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('formEliminar').submit();
+                }
+            });
+        }
+
+        // Mostrar Modal al enviar
+        document.getElementById('publicarForm').addEventListener('submit', function () {
+            var myModal = new bootstrap.Modal(document.getElementById('envioModal'));
+            myModal.show();
+        });
+
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('preview');
+            const placeholder = document.getElementById('placeholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    preview.style.display = "block";
+                    placeholder.classList.add('d-none');
+                    placeholder.style.display = "none";
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.querySelectorAll('input[name="phone_option"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.getElementById('input_otro').style.display = (e.target.value === 'otro') ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('checkUbicacion').addEventListener('change', function () {
+            if(this.checked) {
+                document.getElementById('map').classList.remove('d-none');
+                document.getElementById('pac-input').classList.remove('d-none');
+                document.getElementById('map').style.display = 'block';
+                document.getElementById('pac-input').style.display = 'block';
+            } else {
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('pac-input').style.display = 'none';
+            }
+        });
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBiD_LahBkpJ7nN4Qj8IpwrmrOSL3BYdE&libraries=places"></script>
+    <script>
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 21.1527, lng: -100.9311 },
+                zoom: 15,
+            });
+            const input = document.getElementById("pac-input");
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo("bounds", map);
+            const marker = new google.maps.Marker({ map: map });
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+            });
+        }
+        google.maps.event.addDomListener(window, 'load', initMap);
+    </script>
+</body>
+</html>

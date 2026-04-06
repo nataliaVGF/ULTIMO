@@ -1,37 +1,115 @@
-{% extends 'core/base.html' %}
-{% load static %}
 
-{% block content %}
-<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
-    <div class="card shadow-lg border-0 text-center p-5" style="max-width: 500px; border-radius: 20px;">
-        <div class="card-body">
-            <div class="mb-4">
-                <i class="bi bi-envelope-check-fill text-primary" style="font-size: 4rem;"></i>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Cuenta | StuMarket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --accent-color: #1cc88a;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .confirm-card {
+            background: white;
+            border-radius: 25px;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .confirm-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .icon-circle {
+            width: 100px;
+            height: 100px;
+            background: rgba(78, 115, 223, 0.1);
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, var(--primary-color), #224abe);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            transition: 0.3s;
+        }
+
+        .btn-custom:hover {
+            filter: brightness(1.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(78, 115, 223, 0.3);
+        }
+
+        .alert-soft {
+            background-color: #fff4e5;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="confirm-card p-4 p-md-5 text-center shadow-lg" style="max-width: 550px;">
+        
+        <div class="mb-4">
+            <h3 class="fw-bold text-primary mb-5">StuMarket</h3>
+            <div class="icon-circle mb-4">
+                <i class="bi bi-send-check" style="font-size: 3rem;"></i>
             </div>
-            
-            <h2 class="fw-bold text-dark mb-3">¡Casi listo!</h2>
-            <p class="text-muted fs-5">
-                Hemos enviado un enlace de activación a tu correo electrónico. 
-                <br><strong>Por favor, revisa tu bandeja de entrada.</strong>
-            </p>
-            
-            <div class="alert alert-warning d-flex align-items-center mt-4" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>
-                    ¿No lo encuentras? Revisa tu carpeta de <b>SPAM</b> o correo no deseado.
-                </div>
+        </div>
+        
+        <h2 class="fw-bold text-dark mb-3">¡Casi listo!</h2>
+        <p class="text-muted fs-5 mb-4">
+            Hemos enviado un enlace de activación a tu correo electrónico.<br>
+            <span class="fw-bold text-dark">Por favor, revisa tu bandeja de entrada.</span>
+        </p>
+        
+        <div class="alert alert-soft d-flex align-items-center text-start mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                <strong>¿No lo encuentras?</strong> Revisa tu carpeta de <b>SPAM</b> o correos no deseados.
             </div>
+        </div>
 
-            <hr class="my-4">
-
-            <p class="small text-muted mb-4">
-                Una vez que confirmes tu cuenta, podrás entrar a StuMarket y empezar a comprar o vender.
+        <div class="py-3 px-2 mb-4 bg-light rounded-4">
+            <p class="small text-muted mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Una vez que confirmes tu cuenta, podrás empezar a publicar productos o contratar servicios.
             </p>
+        </div>
 
-            <a href="{% url 'login' %}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                Ir al Inicio de Sesión
+        <div class="d-grid gap-2">
+            <a href="{% url 'login' %}" class="btn btn-custom rounded-pill fw-bold btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Ir al Inicio de Sesión
             </a>
+        </div>
+
+        <div class="mt-4">
+            <p class="text-muted small">¿Problemas con el correo? <a href="#" class="text-primary text-decoration-none fw-bold">Volver a enviar</a></p>
         </div>
     </div>
 </div>
-{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

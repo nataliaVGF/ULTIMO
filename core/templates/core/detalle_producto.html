@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,183 +8,275 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .vendor-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; }
-        .rating-stars { color: #ffc107; }
-        .btn-fav { background: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: 0.3s; }
-        .btn-fav:hover { transform: scale(1.1); }
-        .review-card { border: none; border-radius: 15px; background: #ffffff; transition: 0.2s; }
-        .review-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .btn-whatsapp { background-color: #25d366; color: white; border-radius: 50px; font-weight: bold; }
-        .btn-whatsapp:hover { background-color: #128c7e; color: white; }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .vendor-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .rating-stars {
+            color: #ffc107;
+        }
+
+        .btn-fav {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+
+        .btn-fav:hover {
+            transform: scale(1.1);
+        }
+
+        .review-card {
+            border: none;
+            border-radius: 15px;
+            background: #ffffff;
+            transition: 0.2s;
+        }
+
+        .review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-whatsapp {
+            background-color: #25d366;
+            color: white;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #128c7e;
+            color: white;
+        }
+
+        /* Este es el contenedor circular blanco */
+        .btn-fav-container {
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+
+        .btn-fav-container:hover {
+            transform: scale(1.1);
+            background-color: #fff5f5;
+        }
+
+        /* Tamaño del corazón */
+        .btn-fav-container i {
+            font-size: 1.4rem;
+            line-height: 0;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container py-5">
-    <a href="/home/" class="btn btn-link text-decoration-none text-dark fw-bold mb-4">
-        <i class="bi bi-arrow-left me-2"></i> Volver al catálogo
-    </a>
+    <div class="container py-5">
+        <a href="/home/" class="btn btn-link text-decoration-none text-dark fw-bold mb-4">
+            <i class="bi bi-arrow-left me-2"></i> Volver al catálogo
+        </a>
 
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <h1 class="fw-bold display-5">{{ producto.nombre }}</h1>
-            <span class="badge bg-primary rounded-pill">{{ producto.get_tipo_display }}</span>
-        </div>
-        <div class="text-end">
-            <div class="rating-stars fs-4">
-                {% if total_resenas > 0 %}
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h1 class="fw-bold display-5">{{ producto.nombre }}</h1>
+                <span class="badge bg-primary rounded-pill">{{ producto.get_tipo_display }}</span>
+            </div>
+            <div class="text-end">
+                <div class="rating-stars fs-4">
+                    {% if total_resenas > 0 %}
                     {% for i in "12345" %}
-                        <i class="bi bi-star{% if forloop.counter <= promedio_producto %}-fill{% endif %}"></i>
+                    <i class="bi bi-star{% if forloop.counter <= promedio_producto %}-fill{% endif %}"></i>
                     {% endfor %}
                     <span class="text-muted ms-2 fs-6">({{ promedio_producto|floatformat:1 }})</span>
-                {% else %}
-                    <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                    {% else %}
+                    <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i
+                        class="bi bi-star"></i><i class="bi bi-star"></i>
                     <span class="text-muted ms-2 fs-6">(0)</span>
-                {% endif %}
+                    {% endif %}
+                </div>
+                <p class="text-muted mb-0 small">{{ total_resenas }} reseñas en total</p>
             </div>
-            <p class="text-muted mb-0 small">{{ total_resenas }} reseñas en total</p>
         </div>
-    </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="product-card position-relative p-2 bg-white">
-                <img src="{{ producto.imagen.url }}" class="img-fluid rounded-4 w-100" style="max-height: 500px; object-fit: cover;">
-                
-                <div class="position-absolute top-0 end-0 m-4 d-flex flex-column gap-2">
-                    <button class="btn-fav" title="Guardar en favoritos">
-                        <i class="bi bi-heart text-danger"></i>
-                    </button>
-                    <button class="btn-fav" onclick="copyLink()" title="Copiar enlace">
-                        <i class="bi bi-share-fill text-primary"></i>
-                    </button>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="product-card position-relative p-2 bg-white">
+                    <img src="{{ producto.imagen.url }}" class="img-fluid rounded-4 w-100"
+                        style="max-height: 500px; object-fit: cover;">
+
+                    <div class="position-absolute top-0 end-0 m-4 d-flex flex-column gap-2">
+                        <form action="{% url 'agregar_favorito' producto.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-fav-container" title="Guardar en favoritos">
+                                {% if es_favorito %}
+                                <i class="bi bi-heart-fill text-danger"></i>
+                                {% else %}
+                                <i class="bi bi-heart text-danger"></i>
+                                {% endif %}
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="mt-4 p-2">
+                    <h4 class="fw-bold">Sobre este {{ producto.tipo }}</h4>
+                    <p class="text-secondary fs-5" style="white-space: pre-line;">{{ producto.descripcion }}</p>
+                    <h3 class="text-primary fw-bold mt-3">${{ producto.precio }}</h3>
                 </div>
             </div>
 
-            <div class="mt-4 p-2">
-                <h4 class="fw-bold">Sobre este {{ producto.tipo }}</h4>
-                <p class="text-secondary fs-5" style="white-space: pre-line;">{{ producto.descripcion }}</p>
-                <h3 class="text-primary fw-bold mt-3">${{ producto.precio }}</h3>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h6 class="text-muted small fw-bold text-uppercase mb-3">Vendedor</h6>
-                <div class="d-flex align-items-center mb-3">
-                    {% if producto.vendedor.perfil.foto %}
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                    <h6 class="text-muted small fw-bold text-uppercase mb-3">Vendedor</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        {% if producto.vendedor.perfil.foto %}
                         <img src="{{ producto.vendedor.perfil.foto.url }}" class="vendor-img me-3">
-                    {% else %}
-                        <div class="vendor-img me-3 bg-secondary d-flex align-items-center justify-content-center text-white fs-4">
+                        {% else %}
+                        <div
+                            class="vendor-img me-3 bg-secondary d-flex align-items-center justify-content-center text-white fs-4">
                             {{ producto.vendedor.username|slice:":1"|upper }}
                         </div>
-                    {% endif %}
-                    <div>
-                        <h6 class="mb-0 fw-bold">{{ producto.vendedor.first_name }} {{ producto.vendedor.last_name }}</h6>
-                        <div class="rating-stars small">
-                            <i class="bi bi-star-fill"></i> {{ promedio_vendedor|floatformat:1 }} <span class="text-muted">(Promedio total)</span>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ producto.vendedor.first_name }} {{ producto.vendedor.last_name }}</h6>
+                            <div class="rating-stars small">
+                                <i class="bi bi-star-fill"></i> {{ promedio_vendedor|floatformat:1 }} <span
+                                    class="text-muted">(Promedio total)</span>
+                            </div>
                         </div>
                     </div>
+                    <a href="https://wa.me/52{{ producto.telefono_contacto }}" target="_blank"
+                        class="btn btn-whatsapp w-100 py-2">
+                        <i class="bi bi-whatsapp me-2"></i> Contactar al vendedor
+                    </a>
                 </div>
-                <a href="https://wa.me/52{{ producto.telefono_contacto }}" target="_blank" class="btn btn-whatsapp w-100 py-2">
-                    <i class="bi bi-whatsapp me-2"></i> Contactar al vendedor
-                </a>
-            </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h6 class="text-muted small fw-bold text-uppercase mb-3">Ubicación de entrega</h6>
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-light p-3 rounded-3 me-3 text-danger">
-                        <i class="bi bi-geo-alt-fill fs-3"></i>
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h6 class="text-muted small fw-bold text-uppercase mb-3">Ubicación de entrega</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light p-3 rounded-3 me-3 text-danger">
+                            <i class="bi bi-geo-alt-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <p class="fw-bold mb-0">Campus Universitario</p>
+                            <p class="text-muted small mb-0">{{ producto.vendedor.perfil.edificio }} - {{ producto.vendedor.perfil.casillero }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="fw-bold mb-0">Campus Universitario</p>
-                        <p class="text-muted small mb-0">{{ producto.vendedor.perfil.edificio }} - {{ producto.vendedor.perfil.casillero }}</p>
-                    </div>
-                </div>
-                {% if producto.ubicacion_externa %}
+                    {% if producto.ubicacion_externa %}
                     <div class="alert alert-warning border-0 small mb-0">
                         <i class="bi bi-info-circle me-1"></i> Se ofrece fuera: <strong>{{ producto.ubicacion_externa }}</strong>
                     </div>
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="mt-5 pt-4 border-top">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Califica tu experiencia</h3>
-            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalResena">
-                <i class="bi bi-star-half me-2"></i>Dejar opinión
-            </button>
-        </div>
+        <div class="mt-5 pt-4 border-top">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">Califica tu experiencia</h3>
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalResena">
+                    <i class="bi bi-star-half me-2"></i>Dejar opinión
+                </button>
+            </div>
 
-        <div class="row">
-            {% for r in resenas %}
-            <div class="col-md-6 mb-3">
-                <div class="card review-card shadow-sm p-4">
-                    <div class="rating-stars mb-2">
-                        {% for i in "12345" %}
+            <div class="row">
+                {% for r in resenas %}
+                <div class="col-md-6 mb-3">
+                    <div class="card review-card shadow-sm p-4">
+                        <div class="rating-stars mb-2">
+                            {% for i in "12345" %}
                             <i class="bi bi-star{% if forloop.counter <= r.calificacion %}-fill{% endif %}"></i>
-                        {% endfor %}
-                    </div>
-                    <p class="text-dark">"{{ r.comentario }}"</p>
-                    <div class="d-flex align-items-center mt-3">
-                        <div class="bg-light rounded-circle p-2 me-2">
-                            <i class="bi bi-person text-primary"></i>
+                            {% endfor %}
                         </div>
-                        <small class="text-muted fw-bold">{{ r.usuario.first_name }} • {{ r.fecha|date:"d M, Y" }}</small>
+                        <p class="text-dark">"{{ r.comentario }}"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-light rounded-circle p-2 me-2">
+                                <i class="bi bi-person text-primary"></i>
+                            </div>
+                            <small class="text-muted fw-bold">{{ r.usuario.first_name }} • {{ r.fecha|date:"d M, Y"  }}</small>
+                        </div>
                     </div>
                 </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-chat-left-dots display-1 text-light"></i>
+                    <p class="text-muted fs-5 mt-3">Este {{ producto.tipo }} aún no tiene opiniones. ¡Sé el primero!</p>
+                </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="col-12 text-center py-5">
-                <i class="bi bi-chat-left-dots display-1 text-light"></i>
-                <p class="text-muted fs-5 mt-3">Este {{ producto.tipo }} aún no tiene opiniones. ¡Sé el primero!</p>
-            </div>
-            {% endfor %}
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="modalResena" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold">Tu opinión cuenta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="modalResena" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">Tu opinión cuenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="#" method="POST"> {% csrf_token %}
+                    <div class="modal-body">
+                        <label class="form-label">Calificación:</label>
+                        <select name="calificacion" class="form-select mb-3 rounded-pill" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (Excelente)</option>
+                            <option value="4">⭐⭐⭐⭐ (Muy bueno)</option>
+                            <option value="3">⭐⭐⭐ (Bueno)</option>
+                            <option value="2">⭐⭐ (Regular)</option>
+                            <option value="1">⭐ (Malo)</option>
+                        </select>
+                        <label class="form-label">Comentario:</label>
+                        <textarea name="comentario" class="form-control rounded-4" rows="4"
+                            placeholder="¿Qué te pareció el servicio o producto?" required></textarea>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light rounded-pill"
+                            data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Publicar opinión</button>
+                    </div>
+                </form>
             </div>
-            <form action="#" method="POST"> {% csrf_token %}
-                <div class="modal-body">
-                    <label class="form-label">Calificación:</label>
-                    <select name="calificacion" class="form-select mb-3 rounded-pill" required>
-                        <option value="5">⭐⭐⭐⭐⭐ (Excelente)</option>
-                        <option value="4">⭐⭐⭐⭐ (Muy bueno)</option>
-                        <option value="3">⭐⭐⭐ (Bueno)</option>
-                        <option value="2">⭐⭐ (Regular)</option>
-                        <option value="1">⭐ (Malo)</option>
-                    </select>
-                    <label class="form-label">Comentario:</label>
-                    <textarea name="comentario" class="form-control rounded-4" rows="4" placeholder="¿Qué te pareció el servicio o producto?" required></textarea>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">Publicar opinión</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function copyLink() {
-        navigator.clipboard.writeText(window.location.href);
-        alert("¡Enlace copiado! Ya puedes compartir este producto.");
-    }
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("¡Enlace copiado! Ya puedes compartir este producto.");
+        }
+    </script>
 
 </body>
+
 </html>

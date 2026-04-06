@@ -21,16 +21,26 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),
     path('perfil/eliminar/', views.eliminar_cuenta, name='eliminar_cuenta'),
     
-# 5. Recuperación de contraseña (AÑADE LA PRIMERA LÍNEA)
+    # 5. Recuperación de contraseña
     path('reset_password/', auth_views.PasswordResetView.as_view(
-        template_name='core/password_reset.html',
-        email_template_name='core/password_reset_email.html',
-        success_url='/reset_password_sent/'
-    ), name='reset_password'),
-    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(template_name='core/password_reset_sent.html'), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='core/password_reset_confirm.html'), name='password_reset_confirm'),
-    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(template_name='core/password_reset_complete.html'), name='password_reset_complete'),
-    
+    template_name='core/password_reset.html',
+    email_template_name='core/password_reset_email.html', # Texto plano (respaldo)
+    html_email_template_name='core/password_reset_email.html', # <--- AÑADE ESTA LÍNEA CLAVE
+    success_url='/reset_password_sent/'),
+    name='reset_password'),
+
+    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(
+    template_name='core/password_reset_sent.html'),
+    name='password_reset_done'),
+
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+    template_name='core/password_reset_confirm.html'),
+    name='password_reset_confirm'),
+
+    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(
+    template_name='core/password_reset_complete.html'),
+    name='password_reset_complete'),
+
     # 6. Activación de cuenta (Si decides implementar esta funcionalidad)
     path('activar/<uidb64>/<token>/', views.activar, name='activar'),
     
@@ -45,4 +55,17 @@ urlpatterns = [
     path('mis-productos/agregar/', views.agregar_producto, name='agregar_producto'),
     
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
+    
+    #8.-editar_producto (eliminar,editar)
+    path('editar-producto/<int:producto_id>/', views.editar_producto, name='editar_producto'),
+    path('eliminar-producto/<int:producto_id>/', views.eliminar_producto, name='eliminar_producto'),
+    
+    #9.-Terminos y Condiciones
+    path('terminos/', views.terminos_view, name='terminos'), 
+    
+    #10.-favoritos 
+    # core/urls.py
+    path('favoritos/', views.favoritos_view, name='favoritos'),
+    path('favoritos/agregar/<int:producto_id>/', views.agregar_favorito, name='agregar_favorito'),
+    path('favoritos/eliminar/<int:favorito_id>/', views.eliminar_favorito, name='eliminar_favorito'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
